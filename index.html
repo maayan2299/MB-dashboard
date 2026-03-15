@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MB — ניהול עסק</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--black:#0a0a0a;--white:#fff;--blue:#1a5fd4;--blue-l:#3b82f6;--blue-pale:#e8f0fe;--blue-mid:#1e40af;--g100:#f4f4f5;--g200:#e4e4e7;--g300:#d1d1d6;--g400:#a1a1aa;--g500:#71717a;--g700:#3f3f46;--green:#16a34a;--green-l:#dcfce7;--red:#dc2626;--red-l:#fee2e2;--orange-l:#fef3c7;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Heebo',sans-serif;background:var(--g100);color:var(--black);min-height:100vh;direction:rtl;}
+.view{display:none;}.view.active{display:block;}
+.panel{display:none;}.panel.active{display:block;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--black);}
+.login-box{background:var(--white);border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.4);}
+.login-logo{font-size:36px;font-weight:900;text-align:center;margin-bottom:8px;}.login-logo span{color:var(--blue-l);}
+.login-sub{text-align:center;font-size:13px;color:var(--g400);margin-bottom:28px;}
+.login-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.login-group label{font-size:11px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.3px;}
+.login-group input{padding:11px 13px;border:1.5px solid var(--g300);border-radius:8px;font-family:'Heebo',sans-serif;font-size:14px;direction:rtl;}
+.login-group input:focus{outline:none;border-color:var(--blue);}
+.login-btn{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:'Heebo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;}
+.login-btn:hover{background:var(--blue-mid);}
+.login-error{background:var(--red-l);color:var(--red);padding:10px 14px;border-radius:8px;font-size:13px;text-align:center;margin-top:12px;display:none;}
+
+header{background:var(--black);color:var(--white);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:2px solid var(--blue);}
+.logo{font-size:24px;font-weight:900;letter-spacing:-1px;}.logo span{color:var(--blue-l);}
+.header-sub{font-size:10px;color:var(--g400);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:16px;}
+#date-disp{font-size:12px;color:var(--g400);}
+.logout-btn{font-size:12px;color:var(--g400);background:none;border:1px solid var(--g500);padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Heebo',sans-serif;}
+.logout-btn:hover{color:white;border-color:white;}
+
+.tabs{display:flex;background:var(--white);border-bottom:1px solid var(--g200);padding:0 32px;overflow-x:auto;}
+.tab{padding:16px 22px;cursor:pointer;font-size:13px;font-weight:600;color:var(--g500);border-bottom:3px solid transparent;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.tab:hover{color:var(--blue);}.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-cnt{background:var(--g100);color:var(--g500);font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;}
+.tab.active .tab-cnt{background:var(--blue);color:var(--white);}
+
+.main{padding:24px 32px;max-width:1400px;margin:0 auto;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--white);border:1px solid var(--g200);border-radius:10px;padding:16px 18px;}
+.stat-label{font-size:10px;color:var(--g400);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-val{font-size:26px;font-weight:800;line-height:1;}
+.sv-blue{color:var(--blue);}.sv-green{color:var(--green);}.sv-red{color:var(--red);}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-size:20px;font-weight:700;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;font-family:'Heebo',sans-serif;}
+.btn-primary{background:var(--blue);color:var(--white);}.btn-primary:hover{background:var(--blue-mid);}
+.btn-outline{background:var(--white);color:var(--black);border:1.5px solid var(--g300);}.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-danger{background:var(--red-l);color:var(--red);border:1px solid transparent;}.btn-danger:hover{background:var(--red);color:white;}
+.btn-ghost{background:transparent;color:var(--g500);border:1px solid transparent;}.btn-ghost:hover{color:var(--blue);background:var(--blue-pale);}
+.btn-success{background:var(--white);color:var(--g500);border:1.5px solid var(--g300);}.btn-success:hover{background:var(--green-l);color:var(--green);border-color:var(--green);}
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.search-input,.filter-select{padding:9px 12px;border:1.5px solid var(--g300);border-radius:8px;font-family:'Heebo',sans-serif;font-size:13px;background:var(--white);direction:rtl;color:var(--black);}
+.search-input{flex:1;min-width:180px;}.search-input:focus,.filter-select:focus{outline:none;border-color:var(--blue);}
+.table-wrap{background:var(--white);border:1px solid var(--g200);border-radius:12px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--black);color:var(--white);padding:11px 13px;text-align:right;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--g100);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--blue-pale);}
+tbody td{padding:11px 13px;font-size:13px;color:var(--g700);vertical-align:middle;}
+td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g400);margin-top:2px;}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.b-spec{background:#e0e7ff;color:#3730a3;}.b-design{background:var(--orange-l);color:#92400e;}
+.b-wc{background:var(--red-l);color:#991b1b;}.b-wp{background:#fef9c3;color:#713f12;}
+.b-done{background:var(--green-l);color:#15803d;}.b-type{background:var(--g100);color:var(--g700);}
+.b-future{background:var(--blue-pale);color:var(--blue);}.b-past{background:var(--green-l);color:var(--green);}.b-canceled{background:var(--red-l);color:var(--red);}.b-domain{background:#e0f2fe;color:#0369a1;}.b-paySys{background:#ffe4e6;color:#be123c;}.b-connect{background:#f3e8ff;color:#7c3aed;}
+.pi{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.pi-y{background:var(--green-l);color:var(--green);}.pi-n{background:var(--g100);color:var(--g400);}
+.empty{text-align:center;padding:50px 20px;color:var(--g400);}.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4;}.empty-text{font-size:13px;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--white);border-radius:14px;padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;position:relative;direction:rtl;box-shadow:0 24px 60px rgba(0,0,0,.18);animation:mIn .2s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--g200);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.fg .full{grid-column:1/-1;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:700;color:var(--g500);letter-spacing:.3px;text-transform:uppercase;}
+.form-group input,.form-group select,.form-group textarea{padding:9px 11px;border:1.5px solid var(--g300);border-radius:7px;font-family:'Heebo',sans-serif;font-size:13px;color:var(--black);background:var(--white);transition:border-color .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue);}
+.form-group textarea{resize:vertical;min-height:65px;}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--g200);}
+.close-btn{position:absolute;top:14px;left:14px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--g400);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.close-btn:hover{background:var(--g100);color:var(--black);}
+.cbrow{display:flex;align-items:center;gap:8px;padding:6px 0;}
+.cbrow input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);cursor:pointer;}
+.cbrow label{font-size:13px;font-weight:500;cursor:pointer;}
+.students-list{display:flex;flex-direction:column;gap:10px;}
+.student-row{background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:18px;cursor:pointer;transition:all .18s;}
+.student-row:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(26,95,212,.08);}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;color:white;}
+.stu-info{flex:1;}.stu-name{font-size:15px;font-weight:700;}
+.stu-meta{font-size:12px;color:var(--g400);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap;}
+.topics-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+.topic-tag{background:var(--blue-pale);color:var(--blue);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.stu-stats{display:flex;gap:20px;text-align:center;}
+.stu-stat-val{font-size:18px;font-weight:800;}.stu-stat-lbl{font-size:10px;color:var(--g400);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.stu-actions{display:flex;gap:6px;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--g500);cursor:pointer;padding:6px 0;border:none;background:none;font-family:'Heebo',sans-serif;margin-bottom:18px;}
+.back-btn:hover{color:var(--blue);}
+.stu-pg-hdr{background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px 28px;margin-bottom:20px;display:flex;align-items:flex-start;gap:20px;}
+.stu-pg-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;color:white;}
+.stu-pg-info{flex:1;}.stu-pg-name{font-size:22px;font-weight:800;margin-bottom:4px;}
+.stu-pg-meta{font-size:13px;color:var(--g400);display:flex;gap:16px;flex-wrap:wrap;}
+.stu-pg-actions{display:flex;gap:8px;align-items:flex-start;}
+.ls-sec-hdr{display:flex;align-items:center;margin-bottom:12px;margin-top:24px;}
+.ls-sec-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.ls-sec-cnt{background:var(--blue);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.lesson-item{background:var(--white);border:1px solid var(--g200);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:14px;transition:all .15s;}
+.lesson-item:hover{border-color:var(--g300);}
+.lesson-item.past{opacity:.85;}.lesson-item.canceled{opacity:.5;}
+.l-date-col{text-align:center;min-width:46px;}
+.l-weekday{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;}
+.l-day-num{font-size:22px;font-weight:900;line-height:1;}.l-month{font-size:10px;color:var(--g400);font-weight:600;}
+.l-divider{width:1px;height:40px;background:var(--g200);flex-shrink:0;}
+.l-info{flex:1;}.l-time{font-size:12px;color:var(--g400);font-weight:600;}.l-topic{font-size:14px;font-weight:600;margin-top:2px;}.l-notes{font-size:12px;color:var(--g500);margin-top:2px;}
+.l-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}.l-price{font-size:14px;font-weight:700;}
+.months-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.month-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--g300);cursor:pointer;background:var(--white);color:var(--g700);transition:all .15s;font-family:'Heebo',sans-serif;}
+.month-chip.sel{background:var(--blue);color:white;border-color:var(--blue);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--g500);font-weight:600;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+.gen-grid{grid-template-columns:1fr !important;}
+@media(max-width:768px){.main{padding:14px 16px;}header,.tabs{padding-right:16px;padding-left:16px;}.fg{grid-template-columns:1fr;}.fg .full{grid-column:1;}.stu-stats{display:none;}.stu-pg-hdr{flex-direction:column;}}
+
+
+/* ===== GENERAL PANEL ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.kpi-card{background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;border-radius:0 12px 12px 0;}
+.kpi-card.c-blue::before{background:var(--blue);}
+.kpi-card.c-green::before{background:var(--green);}
+.kpi-card.c-purple::before{background:#7c3aed;}
+.kpi-card.c-teal::before{background:#0891b2;}
+.kpi-card.c-orange::before{background:#d97706;}
+.kpi-label{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.kpi-val{font-size:28px;font-weight:900;line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--g400);font-weight:500;}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-card{background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:22px 24px;}
+.chart-card.chart-wide{grid-column:1;}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--black);}
+.bar-filter-row{display:flex;gap:6px;margin-bottom:14px;}
+.bar-filter{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--g300);background:var(--white);color:var(--g500);cursor:pointer;font-family:'Heebo',sans-serif;transition:all .15s;}
+.bar-filter.active{background:var(--blue);color:white;border-color:var(--blue);}
+.status-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g100);}
+.status-row:last-child{border-bottom:none;}
+.status-bar-bg{flex:1;height:7px;background:var(--g100);border-radius:4px;overflow:hidden;}
+.status-bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+.status-label{font-size:12px;font-weight:600;min-width:90px;text-align:right;}
+.status-count{font-size:12px;font-weight:700;min-width:24px;text-align:left;color:var(--g500);}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr;}.kpi-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.kpi-row{grid-template-columns:1fr 1fr;}.kpi-val{font-size:22px;}}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media(max-width:768px){
+  .main{padding:12px 14px;}
+  header{padding:0 16px;height:54px;}
+  .logo{font-size:20px;}
+  .tabs{padding:0 8px;}
+  .tab{padding:12px 10px;font-size:12px;gap:4px;}
+  .fg{grid-template-columns:1fr;}
+  .fg .full{grid-column:1;}
+  .stu-stats{display:none;}
+  .stu-pg-hdr{flex-direction:column;gap:12px;}
+  .stu-pg-actions{width:100%;}
+  .stu-pg-actions .btn{width:100%;justify-content:center;}
+  .sec-hdr{flex-direction:column;align-items:flex-start;gap:10px;}
+  .sec-hdr .btn{width:100%;justify-content:center;}
+  .toolbar{flex-direction:column;}
+  .search-input{width:100%;}
+  .filter-select{width:100%;}
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .stat-card{padding:12px 14px;}
+  .stat-val{font-size:20px;}
+  /* Table on mobile - hide less important columns */
+  .table-wrap{overflow-x:auto;}
+  table{min-width:600px;}
+  thead th{padding:9px 8px;font-size:9px;}
+  tbody td{padding:9px 8px;font-size:12px;}
+  /* Student page mobile */
+  .lesson-item{flex-wrap:wrap;gap:8px;padding:12px 14px;}
+  .l-right{width:100%;justify-content:flex-end;}
+  .ls-sec-hdr{margin-top:16px;}
+  /* Modal mobile */
+  .modal{padding:20px 16px;margin:10px;max-width:calc(100vw - 20px);}
+  .form-actions{flex-direction:column-reverse;}
+  .form-actions .btn{width:100%;justify-content:center;}
+  /* Login */
+  .login-box{padding:28px 20px;margin:16px;}
+  /* Back button */
+  .back-btn{font-size:14px;}
+  /* Student row */
+  .student-row{flex-wrap:wrap;gap:12px;padding:14px 16px;}
+  .stu-actions{width:100%;justify-content:flex-end;}
+  /* Months picker */
+  .months-picker{gap:6px;}
+  .month-chip{padding:6px 10px;font-size:11px;}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .tab-cnt{display:none;}
+  .header-sub{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">טוען...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN VIEW -->
+<div class="view active" id="view-login">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-logo">M<span>B</span></div>
+      <div class="login-sub">ניהול עסק דיגיטלי</div>
+      <div class="login-group"><label>שם משתמש</label><input id="login-user" placeholder="MB" autocomplete="username"></div>
+      <div class="login-group"><label>סיסמה</label><input id="login-pass" type="password" placeholder="••••••" autocomplete="current-password"></div>
+      <button class="login-btn" onclick="doLogin()">כניסה</button>
+      <div class="login-error" id="login-error">שם משתמש או סיסמה שגויים</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN VIEW -->
+<div class="view" id="view-main">
+  <header>
+    <div><div class="logo">M<span>B</span></div><div class="header-sub">ניהול עסק דיגיטלי</div></div>
+    <div class="header-right">
+      <div id="date-disp"></div>
+      <button class="logout-btn" onclick="doLogout()">יציאה</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('ws')" id="tab-ws">אתרים <span class="tab-cnt" id="cnt-ws">0</span></div>
+    <div class="tab" onclick="switchTab('au')" id="tab-au">פתרונות דיגיטליים <span class="tab-cnt" id="cnt-au">0</span></div>
+    <div class="tab" onclick="switchTab('ls')" id="tab-ls">שיעורים פרטיים <span class="tab-cnt" id="cnt-ls">0</span></div>
+    <div class="tab" onclick="switchTab('gen')" id="tab-gen">כללי</div>
+  </div>
+  <div class="main">
+    <div class="panel active" id="panel-ws">
+      <div class="stats-row" id="ws-stats"></div>
+      <div class="sec-hdr"><div class="sec-title">אתרים</div><button class="btn btn-primary" onclick="openModal('website')">+ הוסף אתר</button></div>
+      <div class="toolbar">
+        <input class="search-input" placeholder="חיפוש..." oninput="renderWS()" id="ws-srch">
+        <select class="filter-select" onchange="renderWS()" id="ws-flt">
+          <option value="">כל הסטטוסים</option><option value="spec">אפיון</option><option value="design">עיצוב</option><option value="waiting-client">מחכה ללקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option>
+        </select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>שם האתר</th><th>לקוח</th><th>סוג</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>שולם הכל</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="ws-tbody"></tbody></table><div class="empty" id="ws-empty" style="display:none"><div class="empty-icon">🌐</div><div class="empty-text">אין אתרים עדיין</div></div></div>
+    </div>
+    <div class="panel" id="panel-au">
+      <div class="stats-row" id="au-stats"></div>
+      <div class="sec-hdr"><div class="sec-title">פתרונות דיגיטליים</div><button class="btn btn-primary" onclick="openModal('automation')">+ הוסף פרויקט</button></div>
+      <div class="toolbar">
+        <input class="search-input" placeholder="חיפוש..." oninput="renderAU()" id="au-srch">
+        <select class="filter-select" onchange="renderAU()" id="au-flt">
+          <option value="">כל הסטטוסים</option><option value="spec">אפיון</option><option value="design">בנייה</option><option value="waiting-client">מחכה ללקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option>
+        </select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>שם הפרויקט</th><th>לקוח</th><th>סוג פתרון</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>שולם הכל</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="au-tbody"></tbody></table><div class="empty" id="au-empty" style="display:none"><div class="empty-icon">⚡</div><div class="empty-text">אין פרויקטים עדיין</div></div></div>
+    </div>
+    <div class="panel" id="panel-ls">
+      <div class="stats-row" id="ls-stats"></div>
+      <div class="sec-hdr"><div class="sec-title">שיעורים פרטיים</div><button class="btn btn-primary" onclick="openModal('student')">+ הוסף תלמיד</button></div>
+      <div class="students-list" id="students-list"></div>
+      <div class="empty" id="ls-empty" style="display:none"><div class="empty-icon">📚</div><div class="empty-text">אין תלמידים עדיין</div></div>
+    </div>
+
+    <!-- GENERAL / OVERVIEW PANEL -->
+    <div class="panel" id="panel-gen">
+
+      <!-- KPI ROW -->
+      <div class="kpi-row" id="gen-kpis"></div>
+
+      <!-- CHARTS ROW -->
+      <div class="charts-row">
+
+        <!-- Bar chart: monthly revenue -->
+        <div class="chart-card chart-wide">
+          <div class="chart-title">הכנסות לפי חודש</div>
+          <div class="bar-filter-row">
+            <button class="bar-filter active" onclick="setBarFilter('all',this)">הכל</button>
+            <button class="bar-filter" onclick="setBarFilter('ws',this)">אתרים</button>
+            <button class="bar-filter" onclick="setBarFilter('au',this)">פתרונות</button>
+            <button class="bar-filter" onclick="setBarFilter('ls',this)">שיעורים</button>
+          </div>
+          <div id="bar-chart-wrap" style="position:relative;height:220px;overflow:hidden;">
+            <svg id="bar-chart-svg" style="width:100%;height:100%;" direction="ltr"></svg>
+          </div>
+        </div>
+
+        <!-- Pie chart: distribution -->
+        <div class="chart-card">
+          <div class="chart-title">התפלגות הכנסות</div>
+          <div style="display:flex;align-items:center;justify-content:center;min-height:240px;">
+            <svg id="revenue-pie-svg" viewBox="0 0 400 340" style="width:100%;max-width:400px;overflow:visible;" direction="ltr"></svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUMMARY + STATUS ROW -->
+      <div class="charts-row" style="margin-top:0;">
+
+        <!-- Revenue breakdown -->
+        <div class="chart-card">
+          <div class="chart-title">סיכום הכנסות</div>
+          <div id="gen-summary"></div>
+        </div>
+
+        <!-- Project status breakdown -->
+        <div class="chart-card">
+          <div class="chart-title">סטטוס פרויקטים</div>
+          <div id="gen-status"></div>
+        </div>
+
+        <!-- Lessons this month -->
+        <div class="chart-card">
+          <div class="chart-title">שיעורים החודש</div>
+          <div id="gen-lessons-month"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- STUDENT PAGE VIEW -->
+<div class="view" id="view-student">
+  <header>
+    <div><div class="logo">M<span>B</span></div><div class="header-sub">ניהול עסק דיגיטלי</div></div>
+    <div class="header-right"><button class="logout-btn" onclick="doLogout()">יציאה</button></div>
+  </header>
+  <div class="tabs" style="background:var(--white);border-bottom:1px solid var(--g200);">
+    <div style="padding:0 32px;display:flex;align-items:center;height:53px;"><button class="back-btn" onclick="backToMain()" style="margin:0">← חזרה לרשימה</button></div>
+  </div>
+  <div class="main" id="stu-page"></div>
+</div>
+
+<!-- WEBSITE MODAL -->
+<div class="modal-backdrop" id="modal-website">
+  <div class="modal"><button class="close-btn" onclick="closeModal('website')">✕</button>
+    <div class="modal-title" id="ws-m-title">הוספת אתר חדש</div>
+    <div class="fg">
+      <div class="form-group"><label>שם האתר</label><input id="ws-name"></div>
+      <div class="form-group"><label>שם הלקוח</label><input id="ws-client"></div>
+      <div class="form-group"><label>טלפון</label><input id="ws-phone" type="tel"></div>
+      <div class="form-group"><label>סוג אתר</label><select id="ws-type"><option value="">בחרי...</option><option value="landing">דף נחיתה</option><option value="brand">אתר תדמית</option><option value="shop">חנות</option></select></div>
+      <div class="form-group"><label>תאריך התחלה</label><input id="ws-start" type="date"></div>
+      <div class="form-group"><label>תאריך יעד</label><input id="ws-end" type="date"></div>
+      <div class="form-group"><label>מחיר (₪)</label><input id="ws-price" type="number"></div>
+      <div class="form-group"><label>סטטוס</label><select id="ws-status"><option value="spec">אפיון אתר</option><option value="design">בניית העיצוב</option><option value="waiting-client">מחכה לתוצרים מהלקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option></select></div>
+      <div class="form-group full"><label>תיאור</label><textarea id="ws-desc"></textarea></div>
+      <div class="form-group full"><label>קישור לאתר</label><input id="ws-url" type="url" placeholder="https://..." dir="ltr"></div>
+      <div class="form-group full" style="flex-direction:row;gap:24px;">
+        <div class="cbrow"><input type="checkbox" id="ws-adv" onchange="toggleAdvAmt('ws')"><label for="ws-adv">שולמה מקדמה</label></div>
+        <div id="ws-adv-amt-wrap" style="display:none;margin-top:6px;">
+          <div class="form-group"><label>סכום מקדמה (₪)</label><input id="ws-adv-amt" type="number" placeholder="הכנסי סכום..."></div>
+        </div>
+        <div class="cbrow"><input type="checkbox" id="ws-paid"><label for="ws-paid">שולם הכל</label></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('website')">ביטול</button><button class="btn btn-primary" onclick="saveWS()">שמירה</button></div>
+  </div>
+</div>
+
+<!-- AUTOMATION MODAL -->
+<div class="modal-backdrop" id="modal-automation">
+  <div class="modal"><button class="close-btn" onclick="closeModal('automation')">✕</button>
+    <div class="modal-title" id="au-m-title">הוספת פרויקט חדש</div>
+    <div class="fg">
+      <div class="form-group"><label>שם הפרויקט</label><input id="au-name"></div>
+      <div class="form-group"><label>שם הלקוח</label><input id="au-client"></div>
+      <div class="form-group"><label>טלפון</label><input id="au-phone" type="tel"></div>
+      <div class="form-group"><label>סוג פתרון</label><select id="au-type"><option value="">בחרי...</option><option value="automation">אוטומציה עסקית</option><option value="crm">CRM</option><option value="chatbot">צ׳אטבוט</option><option value="social">רשתות חברתיות</option><option value="email">שיווק מייל</option><option value="analytics">אנליטיקס</option><option value="other">אחר</option></select></div>
+      <div class="form-group"><label>תאריך התחלה</label><input id="au-start" type="date"></div>
+      <div class="form-group"><label>תאריך יעד</label><input id="au-end" type="date"></div>
+      <div class="form-group"><label>מחיר (₪)</label><input id="au-price" type="number"></div>
+      <div class="form-group"><label>סטטוס</label><select id="au-status"><option value="spec">אפיון</option><option value="design">בנייה</option><option value="waiting-client">מחכה לתוצרים מהלקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option></select></div>
+      <div class="form-group full"><label>תיאור</label><textarea id="au-desc"></textarea></div>
+      <div class="form-group full" style="flex-direction:row;gap:24px;">
+        <div class="cbrow"><input type="checkbox" id="au-adv" onchange="toggleAdvAmt('au')"><label for="au-adv">שולמה מקדמה</label></div>
+        <div id="au-adv-amt-wrap" style="display:none;margin-top:6px;">
+          <div class="form-group"><label>סכום מקדמה (₪)</label><input id="au-adv-amt" type="number" placeholder="הכנסי סכום..."></div>
+        </div>
+        <div class="cbrow"><input type="checkbox" id="au-paid"><label for="au-paid">שולם הכל</label></div>
+      </div>
+    </div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('automation')">ביטול</button><button class="btn btn-primary" onclick="saveAU()">שמירה</button></div>
+  </div>
+</div>
+
+<!-- STUDENT MODAL -->
+<div class="modal-backdrop" id="modal-student">
+  <div class="modal"><button class="close-btn" onclick="closeModal('student')">✕</button>
+    <div class="modal-title" id="st-m-title">הוספת תלמיד חדש</div>
+    <div class="fg">
+      <div class="form-group"><label>שם התלמיד</label><input id="st-name"></div>
+      <div class="form-group"><label>גיל / כיתה</label><input id="st-age" placeholder="כיתה ה׳ / גיל 10"></div>
+      <div class="form-group full"><label>נושאי לימוד</label><input id="st-topics" placeholder="מתמטיקה, אנגלית (הפרדה בפסיק)"></div>
+      <div class="form-group"><label>יום קבוע</label><select id="st-day"><option value="">ללא יום קבוע</option><option>ראשון</option><option>שני</option><option>שלישי</option><option>רביעי</option><option>חמישי</option><option>שישי</option></select></div>
+      <div class="form-group"><label>שעה קבועה</label><input id="st-time" type="time"></div>
+      <div class="form-group"><label>משך שיעור קבוע</label><select id="st-duration"><option value="">לא הוגדר</option><option value="30">30 דקות</option><option value="60">שעה</option><option value="90">שעה וחצי</option><option value="120">שעתיים</option></select></div>
+      <div class="form-group"><label>מחיר לשיעור (₪)</label><input id="st-price" type="number"></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('student')">ביטול</button><button class="btn btn-primary" onclick="saveST()">שמירה</button></div>
+  </div>
+</div>
+
+<!-- LESSON MODAL -->
+<div class="modal-backdrop" id="modal-lesson">
+  <div class="modal"><button class="close-btn" onclick="closeModal('lesson')">✕</button>
+    <div class="modal-title" id="ls-m-title">הוספת שיעור</div>
+    <div class="fg">
+      <div class="form-group"><label>תאריך</label><input id="ls-date" type="date"></div>
+      <div class="form-group"><label>שעה</label><input id="ls-time" type="time"></div>
+      <div class="form-group full"><label>נושא השיעור</label><input id="ls-topic" placeholder="לדוג׳ משוואות ממדרגה שנייה"></div>
+      <div class="form-group"><label>מחיר (₪)</label><input id="ls-price" type="number"></div>
+      <div class="form-group"><label>משך השיעור</label><select id="ls-duration"><option value="">לא הוגדר</option><option value="30">30 דקות</option><option value="60">שעה</option><option value="90">שעה וחצי</option><option value="120">שעתיים</option><option value="other">אחר</option></select></div>
+      <div class="form-group"><label>סטטוס</label><select id="ls-status"><option value="future">מתוכנן</option><option value="past">בוצע</option><option value="canceled">בוטל</option></select></div>
+      <div class="form-group full"><label>הערות</label><textarea id="ls-notes"></textarea></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('lesson')">ביטול</button><button class="btn btn-primary" onclick="saveLS()">שמירה</button></div>
+  </div>
+</div>
+
+<!-- GENERATE MODAL -->
+<div class="modal-backdrop" id="modal-generate">
+  <div class="modal"><button class="close-btn" onclick="closeModal('generate')">✕</button>
+    <div class="modal-title">יצירת שיעורים אוטומטית</div>
+    <p style="font-size:13px;color:var(--g500);margin-bottom:16px;">בחרי חודשים — 6 חודשים אחורה עד 6 קדימה. שיעורים שתאריכם עבר יסומנו אוטומטית כ"בוצע"</p>
+    <div class="form-group"><label>בחרי חודשים</label><div class="months-picker" id="months-picker"></div></div>
+    <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('generate')">ביטול</button><button class="btn btn-primary" onclick="generateLessons()">צרי שיעורים</button></div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE =====
+const SB_URL = 'https://nyofvudlycorlmhddqev.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55b2Z2dWRseWNvcmxtaGRkcWV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NjU2NTEsImV4cCI6MjA4NzQ0MTY1MX0.dToPBomhGz9u4SZQVC7pOcijv1Cy4Sg_VbMNBpOOQK4';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ===== AUTH =====
+const USERS = { 'MB': 'MB2026!' , 'mb': 'MB2026!' };
+function toggleAdvAmt(prefix) {
+  const checked = document.getElementById(prefix+'-adv').checked;
+  document.getElementById(prefix+'-adv-amt-wrap').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById(prefix+'-adv-amt').value = '';
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  const valid = (u === 'MB' || u === 'mb') && p === 'MB2026!';
+  if (valid) {
+    localStorage.setItem('mb-auth', '1');
+    document.getElementById('login-error').style.display = 'none';
+    showView('main');
+    loadAll();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  localStorage.removeItem('mb-auth');
+  showView('login');
+}
+
+// ===== STATE =====
+let websites = [], automations = [], students = [], currentStuId = null;
+let ctx = {}, selMonths = [];
+
+// ===== LOADING/TOAST =====
+function showLoading(txt) { document.getElementById('loading-text').textContent = txt||'טוען...'; document.getElementById('loading').classList.add('show'); }
+function hideLoading() { document.getElementById('loading').classList.remove('show'); }
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+(type||''); t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== VIEWS =====
+function showView(id) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+id).classList.add('active'); }
+function backToMain() { showView('main'); currentStuId = null; }
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+  if(t==='gen') renderGeneral();
+}
+
+// ===== LOAD ALL =====
+async function loadAll() {
+  showLoading('טוען נתונים...');
+  try {
+    const [ws, au, stu, ls] = await Promise.all([
+      sb.from('websites').select('*').order('created_at'),
+      sb.from('automations').select('*').order('created_at'),
+      sb.from('students').select('*').order('created_at'),
+      sb.from('lessons').select('*').order('date')
+    ]);
+    websites = ws.data || [];
+    automations = au.data || [];
+    // attach lessons to students
+    students = (stu.data || []).map(s => ({
+      ...s,
+      lessons: (ls.data || []).filter(l => l.student_id === s.id)
+    }));
+    renderWS(); renderAU(); renderStudents(); updateCounts();
+    document.getElementById('date-disp').textContent = new Date().toLocaleDateString('he-IL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  } catch(e) { toast('שגיאה בטעינת נתונים', 'error'); }
+  hideLoading();
+}
+
+// ===== MODALS =====
+function openModal(type, id, extra) {
+  ctx = {type, id: id||null, extra};
+  if (type === 'website') {
+    const m = id ? websites.find(x=>x.id===id) : null;
+    sv({'ws-name':m?.name,'ws-client':m?.client,'ws-phone':m?.phone,'ws-type':m?.type||'','ws-start':m?.start_date,'ws-end':m?.end_date,'ws-price':m?.price,'ws-status':m?.status||'spec','ws-desc':m?.description,'ws-url':m?.url||''});
+    document.getElementById('ws-adv').checked = m?.advance||false;
+    document.getElementById('ws-adv-amt').value = m?.advance_amount||'';
+    document.getElementById('ws-adv-amt-wrap').style.display = (m?.advance) ? 'block' : 'none';
+    document.getElementById('ws-paid').checked = m?.paid||false;
+    document.getElementById('ws-m-title').textContent = id ? 'עריכת אתר' : 'הוספת אתר חדש';
+  } else if (type === 'automation') {
+    const m = id ? automations.find(x=>x.id===id) : null;
+    sv({'au-name':m?.name,'au-client':m?.client,'au-phone':m?.phone,'au-type':m?.type||'','au-start':m?.start_date,'au-end':m?.end_date,'au-price':m?.price,'au-status':m?.status||'spec','au-desc':m?.description});
+    document.getElementById('au-adv').checked = m?.advance||false;
+    document.getElementById('au-adv-amt').value = m?.advance_amount||'';
+    document.getElementById('au-adv-amt-wrap').style.display = (m?.advance) ? 'block' : 'none';
+    document.getElementById('au-paid').checked = m?.paid||false;
+    document.getElementById('au-m-title').textContent = id ? 'עריכת פרויקט' : 'הוספת פרויקט חדש';
+  } else if (type === 'student') {
+    const m = id ? students.find(x=>x.id===id) : null;
+    sv({'st-name':m?.name,'st-age':m?.age,'st-topics':m?.topics,'st-day':m?.day||'','st-time':m?.time,'st-duration':m?.default_duration||'','st-price':m?.price});
+    document.getElementById('st-m-title').textContent = id ? 'עריכת תלמיד' : 'הוספת תלמיד חדש';
+  } else if (type === 'lesson') {
+    const s = students.find(x=>x.id===extra.si);
+    const m = extra.li ? s?.lessons?.find(x=>x.id===extra.li) : null;
+    const today = new Date().toISOString().split('T')[0];
+    sv({'ls-date':m?.date||today,'ls-time':m?.time||s?.time||'','ls-topic':m?.topic||'','ls-price':m?.price||s?.price||'','ls-duration':m?.duration||s?.default_duration||'','ls-status':m?.status||'future','ls-notes':m?.notes||''});
+    document.getElementById('ls-m-title').textContent = extra.li ? 'עריכת שיעור' : 'הוספת שיעור';
+  } else if (type === 'generate') {
+    buildPicker(extra.si);
+  }
+  document.getElementById('modal-'+type).classList.add('open');
+}
+
+function closeModal(type) { document.getElementById('modal-'+type).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(b => { b.addEventListener('click', e => { if(e.target===b) b.classList.remove('open'); }); });
+function sv(map) { Object.entries(map).forEach(([id,val]) => { const el=document.getElementById(id); if(el) el.value=val||''; }); }
+function gv(id) { return document.getElementById(id)?.value||''; }
+function gc(id) { return document.getElementById(id)?.checked||false; }
+
+// ===== SAVE WEBSITE =====
+async function saveWS() {
+  const row = {name:gv('ws-name'),client:gv('ws-client'),phone:gv('ws-phone'),type:gv('ws-type'),start_date:gv('ws-start'),end_date:gv('ws-end'),price:gv('ws-price'),status:gv('ws-status'),description:gv('ws-desc'),url:gv('ws-url'),advance:gc('ws-adv'),advance_amount:gc('ws-adv')?gv('ws-adv-amt'):'',paid:gc('ws-paid')};
+  if(!row.name) return alert('אנא הכנסי שם אתר');
+  showLoading('שומר...');
+  const {error} = ctx.id ? await sb.from('websites').update(row).eq('id',ctx.id) : await sb.from('websites').insert(row);
+  hideLoading(); closeModal('website');
+  if(error) { toast('שגיאה בשמירה', 'error'); return; }
+  toast('נשמר בהצלחה ✓', 'success');
+  await loadAll();
+}
+
+// ===== SAVE AUTOMATION =====
+async function saveAU() {
+  const row = {name:gv('au-name'),client:gv('au-client'),phone:gv('au-phone'),type:gv('au-type'),start_date:gv('au-start'),end_date:gv('au-end'),price:gv('au-price'),status:gv('au-status'),description:gv('au-desc'),advance:gc('au-adv'),advance_amount:gc('au-adv')?gv('au-adv-amt'):'',paid:gc('au-paid')};
+  if(!row.name) return alert('אנא הכנסי שם פרויקט');
+  showLoading('שומר...');
+  const {error} = ctx.id ? await sb.from('automations').update(row).eq('id',ctx.id) : await sb.from('automations').insert(row);
+  hideLoading(); closeModal('automation');
+  if(error) { toast('שגיאה בשמירה', 'error'); return; }
+  toast('נשמר בהצלחה ✓', 'success');
+  await loadAll();
+}
+
+// ===== SAVE STUDENT =====
+async function saveST() {
+  const row = {name:gv('st-name'),age:gv('st-age'),topics:gv('st-topics'),day:gv('st-day'),time:gv('st-time'),default_duration:gv('st-duration'),price:gv('st-price')};
+  if(!row.name) return alert('אנא הכנסי שם תלמיד');
+  showLoading('שומר...');
+  const {error} = ctx.id ? await sb.from('students').update(row).eq('id',ctx.id) : await sb.from('students').insert(row);
+  hideLoading(); closeModal('student');
+  if(error) { toast('שגיאה בשמירה', 'error'); return; }
+  toast('נשמר בהצלחה ✓', 'success');
+  await loadAll();
+  if(currentStuId) renderStuPage(currentStuId);
+}
+
+// ===== SAVE LESSON =====
+async function saveLS() {
+  const row = {student_id:ctx.extra.si, date:gv('ls-date'),time:gv('ls-time'),topic:gv('ls-topic'),price:gv('ls-price'),duration:gv('ls-duration'),status:gv('ls-status'),notes:gv('ls-notes')};
+  if(!row.date) return alert('אנא בחרי תאריך');
+  showLoading('שומר...');
+  const {error} = ctx.extra.li ? await sb.from('lessons').update(row).eq('id',ctx.extra.li) : await sb.from('lessons').insert(row);
+  hideLoading(); closeModal('lesson');
+  if(error) { toast('שגיאה בשמירה', 'error'); return; }
+  toast('נשמר בהצלחה ✓', 'success');
+  await loadAll();
+  if(currentStuId) renderStuPage(currentStuId);
+}
+
+// ===== DELETE =====
+async function delItem(table, id) {
+  if(!confirm('למחוק?')) return;
+  showLoading('מוחק...');
+  await sb.from(table).delete().eq('id', id);
+  hideLoading(); toast('נמחק', 'success');
+  await loadAll();
+  if(currentStuId && table==='students') backToMain();
+}
+
+async function delLesson(id) {
+  if(!confirm('למחוק שיעור זה?')) return;
+  showLoading('מוחק...');
+  await sb.from('lessons').delete().eq('id', id);
+  hideLoading(); toast('נמחק', 'success');
+  await loadAll();
+  if(currentStuId) renderStuPage(currentStuId);
+}
+
+async function markDone(id) {
+  showLoading('מעדכן...');
+  await sb.from('lessons').update({status:'past'}).eq('id', id);
+  hideLoading(); toast('סומן כבוצע ✓', 'success');
+  await loadAll();
+  if(currentStuId) renderStuPage(currentStuId);
+}
+
+// ===== GENERATE LESSONS =====
+const HM=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const DM={'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'שבת':6};
+
+function buildPicker(si) {
+  selMonths = []; ctx.extra = {si};
+  const now = new Date(); const picker = document.getElementById('months-picker'); picker.innerHTML = '';
+  // 6 months back + current + 6 months forward = 13 months total
+  for(let i=-6;i<=6;i++){
+    const d = new Date(now.getFullYear(), now.getMonth()+i, 1);
+    const label = HM[d.getMonth()]+' '+d.getFullYear();
+    const key = d.getFullYear()+'-'+d.getMonth();
+    const chip = document.createElement('button'); chip.className='month-chip'; chip.textContent=label;
+    // Mark current month visually
+    if(i===0) chip.style.fontWeight='800';
+    chip.onclick = () => { if(selMonths.includes(key)){selMonths=selMonths.filter(k=>k!==key);chip.classList.remove('sel');}else{selMonths.push(key);chip.classList.add('sel');} };
+    picker.appendChild(chip);
+  }
+}
+
+async function generateLessons() {
+  if(!selMonths.length) return alert('בחרי לפחות חודש אחד');
+  const {si} = ctx.extra;
+  const s = students.find(x=>x.id===si);
+  if(!s?.day) return alert('לתלמיד זה אין יום קבוע. ערכי את פרטי התלמיד תחילה.');
+  const dayNum = DM[s.day];
+  const today = new Date().toISOString().split('T')[0];
+  const existing = new Set((s.lessons||[]).map(l=>l.date));
+  const toInsert = [];
+  selMonths.forEach(key => {
+    const parts = key.split('-'); const y=parseInt(parts[0]); const m=parseInt(parts[1]);
+    const d = new Date(y,m,1);
+    while(d.getMonth()===m){
+      if(d.getDay()===dayNum){
+        const iso = d.toISOString().split('T')[0];
+        if(!existing.has(iso)){
+          const lessonStatus = iso <= today ? 'past' : 'future';
+          toInsert.push({student_id:si,date:iso,time:s.time||'',topic:'',price:s.price||'',duration:s.default_duration||'',status:lessonStatus,notes:''}); existing.add(iso); }
+      }
+      d.setDate(d.getDate()+1);
+    }
+  });
+  if(!toInsert.length) { closeModal('generate'); toast('כל השיעורים כבר קיימים', 'success'); return; }
+  showLoading('יוצר שיעורים...');
+  const {error} = await sb.from('lessons').insert(toInsert);
+  hideLoading(); closeModal('generate');
+  if(error){ toast('שגיאה ביצירת שיעורים', 'error'); return; }
+  toast('נוצרו '+toInsert.length+' שיעורים ✓', 'success');
+  await loadAll();
+  if(currentStuId) renderStuPage(currentStuId);
+}
+
+// ===== EFFECTIVE STATUS: if not manually canceled, derive from date =====
+function effectiveStatus(l) {
+  if(l.status === 'canceled') return 'canceled'; // manual override always respected
+  const today = new Date().toISOString().split('T')[0];
+  if(l.status === 'past') return 'past'; // manually marked done
+  // status is 'future' — check if date already passed
+  if(l.date && l.date < today) return 'past';
+  return 'future';
+}
+
+// ===== HELPERS =====
+const SL={spec:'אפיון',design:'עיצוב/בנייה','waiting-client':'מחכה ללקוח','waiting-pay':'מחכה לתשלום','waiting-domain':'עיכוב דומיין','waiting-payment-sys':'עיכוב סליקה','waiting-connect':'ממתין לחיבור/סליקה',done:'הושלם'};
+const SC={spec:'b-spec',design:'b-design','waiting-client':'b-wc','waiting-pay':'b-wp','waiting-domain':'b-domain','waiting-payment-sys':'b-paySys','waiting-connect':'b-connect',done:'b-done'};
+const TL={landing:'דף נחיתה',brand:'תדמית',shop:'חנות',automation:'אוטומציה',crm:'CRM',chatbot:'צ׳אטבוט',social:'רשתות חברתיות',email:'שיווק מייל',analytics:'אנליטיקס',other:'אחר'};
+const LSL={future:'מתוכנן',past:'בוצע',canceled:'בוטל'};
+const LSC={future:'b-future',past:'b-past',canceled:'b-canceled'};
+const WD=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
+function fd(d){if(!d)return'—';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2);}
+function fdp(d){if(!d)return{day:'—',month:'—',wd:''};const dt=new Date(d+'T12:00:00');return{day:dt.getDate(),month:HM[dt.getMonth()].slice(0,3),wd:WD[dt.getDay()]};}
+function fp(p){return p?'₪'+parseInt(p).toLocaleString('he-IL'):'—';}
+function pi(v){return v?'<span class="pi pi-y">✓</span>':'<span class="pi pi-n">—</span>';}
+function initials(n){return n?n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase():'?';}
+function aColor(n){const c=['#1a5fd4','#0891b2','#7c3aed','#b45309','#0f766e','#be123c'];let h=0;for(let ch of(n||''))h=(h*31+ch.charCodeAt(0))%c.length;return c[h];}
+
+// ===== RENDER WEBSITES =====
+function renderWS(){
+  const srch=(gv('ws-srch')||'').toLowerCase(); const flt=gv('ws-flt')||'';
+  let items=websites.filter(w=>{
+    if(srch && !(w.name+w.client).toLowerCase().includes(srch)) return false;
+    if(flt && w.status!==flt) return false;
+    return true;
+  });
+  const tbody=document.getElementById('ws-tbody'); const empty=document.getElementById('ws-empty');
+  empty.style.display=items.length?'none':'block';
+  tbody.innerHTML=items.map(w=>'<tr><td><div class="nm">'+w.name+(w.url?' <a href="'+w.url+'" target="_blank" title="פתח אתר" style="font-size:13px;text-decoration:none;">🔗</a>':'')+'</div>'+(w.description?'<div class="sb">'+w.description.substring(0,40)+'</div>':'')+'</td><td><div class="nm">'+(w.client||'—')+'</div>'+(w.phone?'<div class="sb">'+w.phone+'</div>':'')+'</td><td>'+(w.type?'<span class="badge b-type">'+(TL[w.type]||w.type)+'</span>':'—')+'</td><td><div style="font-size:12px">'+(w.start_date?'▶ '+fd(w.start_date):'')+'</div><div style="font-size:12px;color:var(--g400)">'+(w.end_date?'⏹ '+fd(w.end_date):'')+'</div></td><td><strong>'+fp(w.price)+'</strong></td><td style="text-align:center">'+pi(w.advance)+'</td><td style="text-align:center">'+pi(w.paid)+'</td><td><span class="badge '+(SC[w.status]||'')+'">'+(SL[w.status]||w.status)+'</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-outline btn-sm" onclick="openModal(\'website\',\''+w.id+'\')">עריכה</button><button class="btn btn-danger btn-sm" onclick="delItem(\'websites\',\''+w.id+'\')">מחק</button></div></td></tr>').join('');
+  const tot=websites.length,act=websites.filter(w=>w.status!=='done').length,don=websites.filter(w=>w.status==='done').length;
+  const rev=websites.reduce((s,w)=>{if(w.paid)return s+(parseInt(w.price)||0);if(w.advance&&w.advance_amount)return s+(parseInt(w.advance_amount)||0);return s;},0);
+  document.getElementById('ws-stats').innerHTML='<div class="stat-card"><div class="stat-label">סך הכל</div><div class="stat-val">'+tot+'</div></div><div class="stat-card"><div class="stat-label">פעילים</div><div class="stat-val sv-blue">'+act+'</div></div><div class="stat-card"><div class="stat-label">הושלמו</div><div class="stat-val sv-green">'+don+'</div></div><div class="stat-card"><div class="stat-label">הכנסות שולמו</div><div class="stat-val sv-green">₪'+rev.toLocaleString('he-IL')+'</div></div>';
+}
+
+// ===== RENDER AUTOMATIONS =====
+function renderAU(){
+  const srch=(gv('au-srch')||'').toLowerCase(); const flt=gv('au-flt')||'';
+  let items=automations.filter(a=>{
+    if(srch && !(a.name+a.client).toLowerCase().includes(srch)) return false;
+    if(flt && a.status!==flt) return false;
+    return true;
+  });
+  const tbody=document.getElementById('au-tbody'); const empty=document.getElementById('au-empty');
+  empty.style.display=items.length?'none':'block';
+  tbody.innerHTML=items.map(a=>'<tr><td><div class="nm">'+a.name+'</div>'+(a.description?'<div class="sb">'+a.description.substring(0,40)+'</div>':'')+'</td><td><div class="nm">'+(a.client||'—')+'</div>'+(a.phone?'<div class="sb">'+a.phone+'</div>':'')+'</td><td>'+(a.type?'<span class="badge b-type">'+(TL[a.type]||a.type)+'</span>':'—')+'</td><td><div style="font-size:12px">'+(a.start_date?'▶ '+fd(a.start_date):'')+'</div><div style="font-size:12px;color:var(--g400)">'+(a.end_date?'⏹ '+fd(a.end_date):'')+'</div></td><td><strong>'+fp(a.price)+'</strong></td><td style="text-align:center">'+pi(a.advance)+'</td><td style="text-align:center">'+pi(a.paid)+'</td><td><span class="badge '+(SC[a.status]||'')+'">'+(SL[a.status]||a.status)+'</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-outline btn-sm" onclick="openModal(\'automation\',\''+a.id+'\')">עריכה</button><button class="btn btn-danger btn-sm" onclick="delItem(\'automations\',\''+a.id+'\')">מחק</button></div></td></tr>').join('');
+  const tot=automations.length,act=automations.filter(a=>a.status!=='done').length,don=automations.filter(a=>a.status==='done').length;
+  const rev=automations.reduce((s,a)=>{if(a.paid)return s+(parseInt(a.price)||0);if(a.advance&&a.advance_amount)return s+(parseInt(a.advance_amount)||0);return s;},0);
+  document.getElementById('au-stats').innerHTML='<div class="stat-card"><div class="stat-label">סך הכל</div><div class="stat-val">'+tot+'</div></div><div class="stat-card"><div class="stat-label">פעילים</div><div class="stat-val sv-blue">'+act+'</div></div><div class="stat-card"><div class="stat-label">הושלמו</div><div class="stat-val sv-green">'+don+'</div></div><div class="stat-card"><div class="stat-label">הכנסות שולמו</div><div class="stat-val sv-green">₪'+rev.toLocaleString('he-IL')+'</div></div>';
+}
+
+// ===== RENDER STUDENTS =====
+function renderStudents(){
+  const list=document.getElementById('students-list'); const empty=document.getElementById('ls-empty');
+  if(!students.length){list.innerHTML='';empty.style.display='block';renderLsStats();return;}
+  empty.style.display='none';
+  list.innerHTML=students.map(s=>{
+    const topics=s.topics?s.topics.split(',').map(t=>t.trim()).filter(Boolean):[];
+    const lessons=s.lessons||[];
+    const done=lessons.filter(l=>effectiveStatus(l)==='past').length;
+    const upcoming=lessons.filter(l=>effectiveStatus(l)==='future').length;
+    const rev=lessons.filter(l=>effectiveStatus(l)==='past').reduce((sum,l)=>sum+(parseInt(l.price)||0),0);
+    const col=aColor(s.name);
+    return '<div class="student-row" onclick="openStuPage(\''+s.id+'\')"><div class="avatar" style="background:'+col+'">'+initials(s.name)+'</div><div class="stu-info"><div class="stu-name">'+s.name+'</div><div class="stu-meta">'+(s.age?'<span>📚 '+s.age+'</span>':'')+(s.day?'<span>📅 יום '+s.day+(s.time?' '+s.time:'')+'</span>':'')+(s.price?'<span>💰 '+fp(s.price)+'/שיעור</span>':'')+'</div>'+(topics.length?'<div class="topics-row">'+topics.map(t=>'<span class="topic-tag">'+t+'</span>').join('')+'</div>':'')+'</div><div class="stu-stats"><div><div class="stu-stat-val sv-green">'+done+'</div><div class="stu-stat-lbl">בוצעו</div></div><div><div class="stu-stat-val sv-blue">'+upcoming+'</div><div class="stu-stat-lbl">קרובים</div></div><div><div class="stu-stat-val">₪'+rev.toLocaleString('he-IL')+'</div><div class="stu-stat-lbl">הכנסות</div></div></div><div class="stu-actions" onclick="event.stopPropagation()"><button class="btn btn-outline btn-sm" onclick="openModal(\'student\',\''+s.id+'\')">עריכה</button><button class="btn btn-danger btn-sm" onclick="delItem(\'students\',\''+s.id+'\')">מחק</button></div></div>';
+  }).join('');
+  renderLsStats();
+}
+
+function renderLsStats(){
+  const tot=students.length; const all=students.flatMap(s=>s.lessons||[]);
+  const done=all.filter(l=>effectiveStatus(l)==='past').length; const up=all.filter(l=>effectiveStatus(l)==='future').length;
+  const rev=all.filter(l=>effectiveStatus(l)==='past').reduce((s,l)=>s+(parseInt(l.price)||0),0);
+  document.getElementById('ls-stats').innerHTML='<div class="stat-card"><div class="stat-label">תלמידים</div><div class="stat-val">'+tot+'</div></div><div class="stat-card"><div class="stat-label">שיעורים בוצעו</div><div class="stat-val sv-green">'+done+'</div></div><div class="stat-card"><div class="stat-label">שיעורים קרובים</div><div class="stat-val sv-blue">'+up+'</div></div><div class="stat-card"><div class="stat-label">הכנסות שיעורים</div><div class="stat-val sv-green">₪'+rev.toLocaleString('he-IL')+'</div></div>';
+}
+
+// ===== STUDENT PAGE =====
+function openStuPage(id){ currentStuId=id; renderStuPage(id); showView('student'); }
+
+function renderStuPage(id){
+  const s=students.find(x=>x.id===id); if(!s) return;
+  const lessons=(s.lessons||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
+  const topics=s.topics?s.topics.split(',').map(t=>t.trim()).filter(Boolean):[];
+  const col=aColor(s.name);
+  const past=lessons.filter(l=>effectiveStatus(l)==='past');
+  const future=lessons.filter(l=>effectiveStatus(l)==='future');
+  const canceled=lessons.filter(l=>effectiveStatus(l)==='canceled');
+  const rev=past.reduce((sum,l)=>sum+(parseInt(l.price)||0),0);
+  document.getElementById('stu-page').innerHTML=
+    '<div class="stu-pg-hdr"><div class="stu-pg-avatar" style="background:'+col+'">'+initials(s.name)+'</div><div class="stu-pg-info"><div class="stu-pg-name">'+s.name+'</div><div class="stu-pg-meta">'+(s.age?'<span>📚 '+s.age+'</span>':'')+(s.day?'<span>📅 יום '+s.day+(s.time?' '+s.time:'')+'</span>':'')+(s.price?'<span>💰 '+fp(s.price)+'/שיעור</span>':'')+'</div>'+(topics.length?'<div class="topics-row" style="margin-top:8px">'+topics.map(t=>'<span class="topic-tag">'+t+'</span>').join('')+'</div>':'')+'</div><div class="stu-pg-actions"><button class="btn btn-outline btn-sm" onclick="openModal(\'student\',\''+id+'\')">עריכת פרטים</button></div></div>'+
+    '<div class="stats-row"><div class="stat-card"><div class="stat-label">שיעורים בוצעו</div><div class="stat-val sv-green">'+past.length+'</div></div><div class="stat-card"><div class="stat-label">שיעורים קרובים</div><div class="stat-val sv-blue">'+future.length+'</div></div><div class="stat-card"><div class="stat-label">בוטלו</div><div class="stat-val sv-red">'+canceled.length+'</div></div><div class="stat-card"><div class="stat-label">הכנסות כוללות</div><div class="stat-val sv-green">₪'+rev.toLocaleString('he-IL')+'</div></div></div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;"><button class="btn btn-primary" onclick="openModal(\'lesson\',null,{si:\''+id+'\',li:null})">+ הוסף שיעור ידנית</button>'+(s.day?'<button class="btn btn-outline" onclick="openModal(\'generate\',null,{si:\''+id+'\'})">🔄 צרי שיעורים אוטומטית</button>':'<button class="btn btn-outline" style="opacity:.5" onclick="openModal(\'student\',\''+id+'\')">🔄 הגדרי יום קבוע תחילה</button>')+'</div>'+
+    '<div class="ls-sec-hdr"><div class="ls-sec-title">📅 שיעורים קרובים <span class="ls-sec-cnt">'+future.length+'</span></div></div>'+
+    (future.length?future.map(l=>lItem(l)).join(''):'<div class="empty" style="padding:20px"><div class="empty-text">אין שיעורים מתוכננים</div></div>')+
+    '<div class="ls-sec-hdr" style="margin-top:28px"><div class="ls-sec-title">✅ שיעורים שבוצעו <span class="ls-sec-cnt">'+past.length+'</span></div></div>'+
+    (past.length?past.slice().reverse().map(l=>lItem(l)).join(''):'<div class="empty" style="padding:20px"><div class="empty-text">עדיין לא בוצעו שיעורים</div></div>')+
+    (canceled.length?'<div class="ls-sec-hdr" style="margin-top:28px"><div class="ls-sec-title">❌ בוטלו <span class="ls-sec-cnt">'+canceled.length+'</span></div></div>'+canceled.map(l=>lItem(l)).join(''):'');
+}
+
+const DUR_LABELS = {'30':'30 דק׳','60':'שעה','90':'שעה וחצי','120':'שעתיים'};
+function durLabel(d){ return d ? (DUR_LABELS[d]||d+'דק׳') : ''; }
+
+function lItem(l){
+  const p=fdp(l.date);
+  const eff=effectiveStatus(l);
+  return '<div class="lesson-item '+eff+'"><div class="l-date-col"><div class="l-weekday">'+p.wd+'</div><div class="l-day-num">'+p.day+'</div><div class="l-month">'+p.month+'</div></div><div class="l-divider"></div><div class="l-info">'+(l.time||l.duration?'<div class="l-time">'+( l.time ? '🕐 '+l.time : '')+( l.time && l.duration ? ' · ' : '')+( l.duration ? '⏱ '+durLabel(l.duration) : '')+'</div>':'')+'<div class="l-topic">'+(l.topic||'<span style="color:var(--g400);font-weight:400;font-size:13px">נושא לא הוגדר</span>')+'</div>'+(l.notes?'<div class="l-notes">📝 '+l.notes+'</div>':'')+'</div><div class="l-right"><span class="badge '+(LSC[eff]||'')+'">'+(LSL[eff]||eff)+'</span>'+(l.price?'<span class="l-price">'+fp(l.price)+'</span>':'')+'<button class="btn btn-ghost btn-sm" onclick="openModal(\'lesson\',null,{si:\''+l.student_id+'\',li:\''+l.id+'\'})" title="עריכה">✏️</button>'+(eff==='future'?'<button class="btn btn-success btn-sm" onclick="markDone(\''+l.id+'\')">סמני בוצע</button>':'')+'<button class="btn btn-danger btn-sm" onclick="delLesson(\''+l.id+'\')">🗑</button></div></div>';
+}
+
+let barFilter = 'all';
+function setBarFilter(f, btn) {
+  barFilter = f;
+  document.querySelectorAll('.bar-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawBarChart();
+}
+
+function getRevenues() {
+  const wsRev = websites.reduce((s,w)=>{
+    if(w.paid) return s+(parseInt(w.price)||0);
+    if(w.advance&&w.advance_amount) return s+(parseInt(w.advance_amount)||0);
+    return s;
+  },0);
+  const auRev = automations.reduce((s,a)=>{
+    if(a.paid) return s+(parseInt(a.price)||0);
+    if(a.advance&&a.advance_amount) return s+(parseInt(a.advance_amount)||0);
+    return s;
+  },0);
+  const lsRev = students.flatMap(s=>s.lessons||[])
+    .filter(l=>effectiveStatus(l)==='past')
+    .reduce((s,l)=>s+(parseInt(l.price)||0),0);
+  return {wsRev, auRev, lsRev, total: wsRev+auRev+lsRev};
+}
+
+function drawBarChart() {
+  const svg = document.getElementById('bar-chart-svg');
+  if(!svg) return;
+  const wrap = document.getElementById('bar-chart-wrap');
+  const W = wrap.offsetWidth || 500, H = 220;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  // Build monthly data for last 6 months
+  const now = new Date();
+  const months = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({y:d.getFullYear(), m:d.getMonth(), label:['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][d.getMonth()]});
+  }
+
+  const getMonthRev = (items, priceKey, dateKey, filterFn) => {
+    return months.map(({y,m}) => items.filter(x => {
+      const d = new Date((x[dateKey]||'')+'T12:00:00');
+      return filterFn(x) && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,x)=>s+(parseInt(x[priceKey])||0),0));
+  };
+
+  let wsData = [], auData = [], lsData = [];
+  if(barFilter==='all'||barFilter==='ws') {
+    wsData = months.map(({y,m})=>websites.filter(w=>{
+      const d=new Date((w.end_date||w.start_date||'')+'T12:00:00');
+      return (w.paid||(w.advance&&w.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,w)=>s+(w.paid?(parseInt(w.price)||0):(parseInt(w.advance_amount)||0)),0));
+  } else wsData = months.map(()=>0);
+
+  if(barFilter==='all'||barFilter==='au') {
+    auData = months.map(({y,m})=>automations.filter(a=>{
+      const d=new Date((a.end_date||a.start_date||'')+'T12:00:00');
+      return (a.paid||(a.advance&&a.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,a)=>s+(a.paid?(parseInt(a.price)||0):(parseInt(a.advance_amount)||0)),0));
+  } else auData = months.map(()=>0);
+
+  if(barFilter==='all'||barFilter==='ls') {
+    lsData = months.map(({y,m})=>students.flatMap(s=>s.lessons||[]).filter(l=>{
+      const d=new Date((l.date||'')+'T12:00:00');
+      return effectiveStatus(l)==='past' && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,l)=>s+(parseInt(l.price)||0),0));
+  } else lsData = months.map(()=>0);
+
+  const totals = months.map((_,i)=>wsData[i]+auData[i]+lsData[i]);
+  const maxVal = Math.max(...totals, 1);
+
+  const padL=40, padR=10, padT=16, padB=36;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const barW = Math.floor(chartW/months.length*0.55);
+  const gap  = chartW/months.length;
+  const colors = {ws:'#1a5fd4',au:'#0891b2',ls:'#7c3aed'};
+
+  let out = '';
+  // Y grid lines (3 lines)
+  for(let g=1;g<=3;g++){
+    const yy = padT + chartH - (g/3)*chartH;
+    const val = Math.round((g/3)*maxVal);
+    out += `<line x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}" stroke="#e4e4e7" stroke-width="1" stroke-dasharray="4,3"/>`;
+    out += `<text x="${padL-4}" y="${yy+4}" text-anchor="end" font-size="9" fill="#a1a1aa" font-family="Heebo,sans-serif">₪${val>=1000?Math.round(val/1000)+'K':val}</text>`;
+  }
+
+  months.forEach(({label},i) => {
+    const x = padL + i*gap + gap/2 - barW/2;
+    const segs = [{v:wsData[i],c:colors.ws},{v:auData[i],c:colors.au},{v:lsData[i],c:colors.ls}];
+    let stackY = padT+chartH;
+    segs.forEach(({v,c})=>{
+      if(v<=0) return;
+      const h = Math.max((v/maxVal)*chartH, 2);
+      stackY -= h;
+      out += `<rect x="${x}" y="${stackY}" width="${barW}" height="${h}" fill="${c}" rx="3"/>`;
+    });
+    // Total label on top
+    if(totals[i]>0){
+      const ty = padT+chartH-(totals[i]/maxVal)*chartH-5;
+      out += `<text x="${x+barW/2}" y="${ty}" text-anchor="middle" font-size="9" fill="#3f3f46" font-family="Heebo,sans-serif" font-weight="700">₪${totals[i]>=1000?Math.round(totals[i]/1000)+'K':totals[i]}</text>`;
+    }
+    // Month label
+    out += `<text x="${x+barW/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#71717a" font-family="Heebo,sans-serif" font-weight="600">${label}</text>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+function renderGeneral() {
+  const {wsRev, auRev, lsRev, total} = getRevenues();
+  const labels = ['אתרים','פתרונות דיגיטליים','שיעורים פרטיים'];
+  const data = [wsRev, auRev, lsRev];
+  const colors = ['#1a5fd4','#0891b2','#7c3aed'];
+  const pct = (v) => total > 0 ? Math.round(v/total*100) : 0;
+
+  // ── KPI cards ──
+  const now = new Date();
+  const thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const activeProj = websites.filter(w=>w.status!=='done').length + automations.filter(a=>a.status!=='done').length;
+  const doneProj   = websites.filter(w=>w.status==='done').length + automations.filter(a=>a.status==='done').length;
+  const activeStu  = students.length;
+  const mssnThisMonth = students.flatMap(s=>s.lessons||[]).filter(l=>{
+    const d=new Date((l.date||'')+'T12:00:00');
+    return effectiveStatus(l)==='past' && d.getMonth()===thisMonth && d.getFullYear()===thisYear;
+  });
+  const lsThisMonth = mssnThisMonth.reduce((s,l)=>s+(parseInt(l.price)||0),0);
+  // Revenue this month (ws+au by end_date, ls by lesson date)
+  const wsThisMonth = websites.filter(w=>{const d=new Date((w.end_date||'')+'T12:00:00');return (w.paid||(w.advance&&w.advance_amount))&&d.getMonth()===thisMonth&&d.getFullYear()===thisYear;}).reduce((s,w)=>s+(w.paid?(parseInt(w.price)||0):(parseInt(w.advance_amount)||0)),0);
+  const auThisMonth = automations.filter(a=>{const d=new Date((a.end_date||'')+'T12:00:00');return (a.paid||(a.advance&&a.advance_amount))&&d.getMonth()===thisMonth&&d.getFullYear()===thisYear;}).reduce((s,a)=>s+(a.paid?(parseInt(a.price)||0):(parseInt(a.advance_amount)||0)),0);
+  const revThisMonth = wsThisMonth + auThisMonth + lsThisMonth;
+
+  document.getElementById('gen-kpis').innerHTML = `
+    <div class="kpi-card c-green">
+      <div class="kpi-label">סה״כ הכנסות</div>
+      <div class="kpi-val" style="color:var(--green)">₪${total.toLocaleString('he-IL')}</div>
+      <div class="kpi-sub">מכל המקורות</div>
+    </div>
+    <div class="kpi-card c-blue">
+      <div class="kpi-label">הכנסות החודש</div>
+      <div class="kpi-val" style="color:var(--blue)">₪${revThisMonth.toLocaleString('he-IL')}</div>
+      <div class="kpi-sub">${['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'][thisMonth]}</div>
+    </div>
+    <div class="kpi-card c-teal">
+      <div class="kpi-label">פרויקטים פעילים</div>
+      <div class="kpi-val" style="color:#0891b2">${activeProj}</div>
+      <div class="kpi-sub">${doneProj} הושלמו</div>
+    </div>
+    <div class="kpi-card c-purple">
+      <div class="kpi-label">תלמידים פעילים</div>
+      <div class="kpi-val" style="color:#7c3aed">${activeStu}</div>
+      <div class="kpi-sub">${mssnThisMonth.length} שיעורים החודש</div>
+    </div>
+    <div class="kpi-card c-orange">
+      <div class="kpi-label">שיעורים החודש</div>
+      <div class="kpi-val" style="color:#d97706">₪${lsThisMonth.toLocaleString('he-IL')}</div>
+      <div class="kpi-sub">${mssnThisMonth.length} שיעורים</div>
+    </div>`;
+
+  // ── Bar chart ──
+  setTimeout(drawBarChart, 50);
+
+  // ── Pie chart ──
+  const svg = document.getElementById('revenue-pie-svg');
+  if(total === 0) {
+    svg.innerHTML = '<text x="200" y="170" text-anchor="middle" font-family="Heebo,sans-serif" font-size="14" fill="#a1a1aa">אין נתונים עדיין</text>';
+  } else {
+    const cx=200,cy=170,R=95,r=52;
+    let sa=-Math.PI/2, paths='',lines='',texts='';
+    data.forEach((val,i)=>{
+      if(val===0)return;
+      const ang=(val/total)*2*Math.PI, ea=sa+ang, mid=sa+ang/2;
+      const x1=cx+R*Math.cos(sa),y1=cy+R*Math.sin(sa);
+      const x2=cx+R*Math.cos(ea),y2=cy+R*Math.sin(ea);
+      const x3=cx+r*Math.cos(ea),y3=cy+r*Math.sin(ea);
+      const x4=cx+r*Math.cos(sa),y4=cy+r*Math.sin(sa);
+      const la=ang>Math.PI?1:0;
+      paths+=`<path d="M ${x1} ${y1} A ${R} ${R} 0 ${la} 1 ${x2} ${y2} L ${x3} ${y3} A ${r} ${r} 0 ${la} 0 ${x4} ${y4} Z" fill="${colors[i]}" stroke="white" stroke-width="3"/>`;
+      const lr1=R+16,lr2=R+38;
+      const lx1=cx+lr1*Math.cos(mid),ly1=cy+lr1*Math.sin(mid);
+      const lx2=cx+lr2*Math.cos(mid),ly2=cy+lr2*Math.sin(mid);
+      const side=Math.cos(mid)>=0?1:-1;
+      const lx3=lx2+side*24,ly3=ly2;
+      const anchor=side>=0?'start':'end';
+      const tx=lx3+side*4;
+      lines+=`<polyline points="${lx1},${ly1} ${lx2},${ly2} ${lx3},${ly3}" fill="none" stroke="${colors[i]}" stroke-width="1.5"/>`;
+      lines+=`<circle cx="${lx1}" cy="${ly1}" r="3" fill="${colors[i]}"/>`;
+      texts+=`<text x="${tx}" y="${ly3-6}" text-anchor="${anchor}" font-family="Heebo,sans-serif" font-size="11" fill="#3f3f46" font-weight="700">${labels[i]}</text>`;
+      texts+=`<text x="${tx}" y="${ly3+8}" text-anchor="${anchor}" font-family="Heebo,sans-serif" font-size="13" fill="${colors[i]}" font-weight="900">${pct(val)}%</text>`;
+      sa=ea;
+    });
+    svg.innerHTML=paths+lines+texts;
+  }
+
+  // ── Revenue summary ──
+  const rows = labels.map((lbl,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--g100);">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <div style="width:11px;height:11px;border-radius:50%;background:${colors[i]};flex-shrink:0;"></div>
+        <span style="font-size:13px;font-weight:600;">${lbl}</span>
+      </div>
+      <div style="text-align:left;">
+        <span style="font-size:15px;font-weight:800;color:${colors[i]};">₪${data[i].toLocaleString('he-IL')}</span>
+        <span style="font-size:11px;color:var(--g400);margin-right:5px;">${pct(data[i])}%</span>
+      </div>
+    </div>`).join('');
+  document.getElementById('gen-summary').innerHTML = rows +
+    `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;">
+      <span style="font-size:14px;font-weight:700;">סה״כ</span>
+      <span style="font-size:20px;font-weight:900;color:var(--green);">₪${total.toLocaleString('he-IL')}</span>
+    </div>`;
+
+  // ── Project status ──
+  const allProj = [...websites,...automations];
+  const statusMap = {spec:'אפיון',design:'עיצוב/בנייה','waiting-client':'מחכה ללקוח','waiting-pay':'מחכה לתשלום','waiting-domain':'עיכוב דומיין','waiting-payment-sys':'עיכוב סליקה','waiting-connect':'ממתין לחיבור/סליקה',done:'הושלם'};
+  const statusColors = {spec:'#6366f1',design:'#f59e0b','waiting-client':'#ef4444','waiting-pay':'#f97316','waiting-domain':'#0891b2','waiting-payment-sys':'#be123c','waiting-connect':'#7c3aed',done:'#16a34a'};
+  const counts = {};
+  allProj.forEach(p=>{counts[p.status]=(counts[p.status]||0)+1;});
+  const maxC = Math.max(...Object.values(counts),1);
+  document.getElementById('gen-status').innerHTML = Object.entries(statusMap).map(([k,lbl])=>`
+    <div class="status-row">
+      <div class="status-label" style="color:${statusColors[k]||'#71717a'}">${lbl}</div>
+      <div class="status-bar-bg"><div class="status-bar-fill" style="width:${((counts[k]||0)/maxC)*100}%;background:${statusColors[k]||'#71717a'}"></div></div>
+      <div class="status-count">${counts[k]||0}</div>
+    </div>`).join('');
+
+  // ── Lessons this month breakdown by student ──
+  const stuLsMonth = students.map(s=>{
+    const n=s.lessons?.filter(l=>{
+      const d=new Date((l.date||'')+'T12:00:00');
+      return effectiveStatus(l)==='past'&&d.getMonth()===thisMonth&&d.getFullYear()===thisYear;
+    })||[];
+    return {name:s.name,cnt:n.length,rev:n.reduce((x,l)=>x+(parseInt(l.price)||0),0)};
+  }).filter(x=>x.cnt>0).sort((a,b)=>b.rev-a.rev);
+
+  document.getElementById('gen-lessons-month').innerHTML = stuLsMonth.length ? stuLsMonth.map(x=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--g100);">
+      <span style="font-size:13px;font-weight:600;">${x.name}</span>
+      <div style="text-align:left;">
+        <span style="font-size:14px;font-weight:800;color:#7c3aed;">₪${x.rev.toLocaleString('he-IL')}</span>
+        <span style="font-size:11px;color:var(--g400);margin-right:5px;">${x.cnt} שיעורים</span>
+      </div>
+    </div>`).join('') + `<div style="display:flex;justify-content:space-between;padding:12px 0;"><span style="font-size:13px;font-weight:700;">סה״כ</span><span style="font-size:15px;font-weight:900;color:#7c3aed;">₪${lsThisMonth.toLocaleString('he-IL')}</span></div>`
+  : '<div style="color:var(--g400);font-size:13px;padding:20px 0;text-align:center;">אין שיעורים החודש</div>';
+}
+
+
+
+function updateCounts(){
+  document.getElementById('cnt-ws').textContent=websites.length;
+  document.getElementById('cnt-au').textContent=automations.length;
+  document.getElementById('cnt-ls').textContent=students.length;
+}
+
+// ===== INIT =====
+if(localStorage.getItem('mb-auth')==='1'){ showView('main'); loadAll(); }
+</script>
+</body>
+</html>
