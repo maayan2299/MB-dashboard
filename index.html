@@ -60,13 +60,13 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--g700);}
       <div class="login-sub">ניהול עסק ופרויקטים</div>
       <div class="login-group">
         <label>שם משתמש</label>
-        <input type="text" id="login-user" placeholder="MB">
+        <input type="text" id="login-user" placeholder="MB" onkeypress="if(event.key==='Enter') doLogin()">
       </div>
       <div class="login-group">
         <label>סיסמה</label>
-        <input type="password" id="login-pass" placeholder="••••••">
+        <input type="password" id="login-pass" placeholder="••••••" onkeypress="if(event.key==='Enter') doLogin()">
       </div>
-      <button class="login-btn" onclick="login()">כניסה</button>
+      <button class="login-btn" onclick="doLogin()">כניסה</button>
     </div>
   </div>
 </div>
@@ -76,7 +76,7 @@ tbody td{padding:11px 13px;font-size:13px;color:var(--g700);}
     <div class="logo">M<span>B</span></div>
     <div class="header-right">
       <span id="date-disp"></span>
-      <button class="logout-btn" onclick="logout()">יציאה</button>
+      <button class="logout-btn" onclick="doLogout()">יציאה</button>
     </div>
   </header>
 
@@ -101,9 +101,10 @@ let websites = [];
 let automations = [];
 let expenses = [];
 
-function login() {
-  const user = document.getElementById('login-user').value;
-  const pass = document.getElementById('login-pass').value;
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  
   if(user === 'MB' && pass === 'MB2026!') {
     localStorage.setItem('mb-auth', '1');
     document.getElementById('view-login').classList.remove('active');
@@ -114,7 +115,7 @@ function login() {
   }
 }
 
-function logout() {
+function doLogout() {
   localStorage.removeItem('mb-auth');
   location.reload();
 }
@@ -133,7 +134,7 @@ async function loadAll() {
     switchTab('general');
   } catch(e) {
     console.error('Error:', e);
-    alert('שגיאה בטעינת הנתונים');
+    alert('שגיאה בטעינת הנתונים: ' + e.message);
   }
 }
 
@@ -146,7 +147,11 @@ function updateDate() {
 
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.closest('.tab').classList.add('active');
+  const tabs = document.querySelectorAll('.tab');
+  if(tab === 'general') tabs[0].classList.add('active');
+  else if(tab === 'websites') tabs[1].classList.add('active');
+  else if(tab === 'automations') tabs[2].classList.add('active');
+  else if(tab === 'expenses') tabs[3].classList.add('active');
   
   if(tab === 'general') renderGeneral();
   else if(tab === 'websites') renderWebsites();
@@ -173,9 +178,9 @@ function renderGeneral() {
 function renderWebsites() {
   const html = websites.map(w => `
     <tr>
-      <td>${w.name}</td>
+      <td><strong>${w.name}</strong></td>
       <td>${w.client}</td>
-      <td>₪${w.price}</td>
+      <td>₪${(w.price||0).toLocaleString('he-IL')}</td>
       <td>${w.status}</td>
       <td>${w.advance ? '✓' : '—'}</td>
       <td>${w.paid ? '✓' : '—'}</td>
@@ -183,10 +188,13 @@ function renderWebsites() {
   `).join('');
   
   document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <button class="btn btn-primary">+ אתר חדש</button>
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>שם</th><th>לקוח</th><th>מחיר</th><th>סטטוס</th><th>מקדמה</th><th>בתשלום</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6" class="empty">אין נתונים</td></tr>'}</tbody>
+        <tbody>${html || '<tr><td colspan="6" style="text-align:center;padding:30px;">אין נתונים</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -195,9 +203,9 @@ function renderWebsites() {
 function renderAutomations() {
   const html = automations.map(a => `
     <tr>
-      <td>${a.name}</td>
+      <td><strong>${a.name}</strong></td>
       <td>${a.client}</td>
-      <td>₪${a.price}</td>
+      <td>₪${(a.price||0).toLocaleString('he-IL')}</td>
       <td>${a.status}</td>
       <td>${a.advance ? '✓' : '—'}</td>
       <td>${a.paid ? '✓' : '—'}</td>
@@ -205,10 +213,13 @@ function renderAutomations() {
   `).join('');
   
   document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <button class="btn btn-primary">+ פתרון חדש</button>
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>שם</th><th>לקוח</th><th>מחיר</th><th>סטטוס</th><th>מקדמה</th><th>בתשלום</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="6" class="empty">אין נתונים</td></tr>'}</tbody>
+        <tbody>${html || '<tr><td colspan="6" style="text-align:center;padding:30px;">אין נתונים</td></tr>'}</tbody>
       </table>
     </div>
   `;
@@ -217,19 +228,22 @@ function renderAutomations() {
 function renderExpenses() {
   const html = expenses.map(e => `
     <tr>
-      <td>${e.name}</td>
+      <td><strong>${e.name}</strong></td>
       <td>${e.category}</td>
-      <td>₪${e.amount}</td>
+      <td>₪${(e.amount||0).toLocaleString('he-IL')}</td>
       <td>${e.type}</td>
       <td>${e.date}</td>
     </tr>
   `).join('');
   
   document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <button class="btn btn-primary">+ הוצאה חדשה</button>
+    </div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>שם</th><th>קטגוריה</th><th>סכום</th><th>סוג</th><th>תאריך</th></tr></thead>
-        <tbody>${html || '<tr><td colspan="5" class="empty">אין נתונים</td></tr>'}</tbody>
+        <tbody>${html || '<tr><td colspan="5" style="text-align:center;padding:30px;">אין נתונים</td></tr>'}</tbody>
       </table>
     </div>
   `;
