@@ -1159,16 +1159,19 @@ function renderEXP() {
   const catF = gv('exp-cat-flt')||'';
   const typeF = gv('exp-type-flt')||'';
   
-  // הרחב הוצאות קבועות לכל חודש
+  // הרחב הוצאות קבועות - כל חודש מ-12 חודשים אחורה עד 12 קדימה
   let expandedExpenses = [];
+  const now = new Date();
+  
   expenses.forEach(e => {
     if(e.type === 'monthly' && e.billing_month) {
-      // הוצאה קבועה - הוסף לכל חודש מ-6 חודשים אחורה עד 6 קדימה
+      // הוצאה קבועה - הוסף לכל חודש
       const baseDateParts = e.billing_month.split('-');
       const baseYear = parseInt(baseDateParts[0]);
       const baseMonth = parseInt(baseDateParts[1]) - 1;
       
-      for(let i = -6; i <= 6; i++) {
+      // הוסף מ-12 חודשים אחורה ל-12 קדימה
+      for(let i = -12; i <= 12; i++) {
         const d = new Date(baseYear, baseMonth + i, 1);
         expandedExpenses.push({
           ...e,
