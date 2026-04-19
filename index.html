@@ -308,6 +308,20 @@ td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g40
 
       </div>
 
+      <!-- EXPENSES VS INCOME CHART -->
+      <div class="charts-row">
+        <div class="chart-card chart-wide">
+          <div class="chart-title">הוצאות מול הכנסות (6 חודשים אחרונים)</div>
+          <div id="expense-chart-wrap" style="position:relative;height:220px;overflow:hidden;">
+            <svg id="expense-chart-svg" style="width:100%;height:100%;" direction="ltr"></svg>
+          </div>
+          <div style="display:flex;gap:20px;margin-top:12px;justify-content:center;font-size:12px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#ef4444;border-radius:2px;"></div>הוצאות</div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#16a34a;border-radius:2px;"></div>הכנסות</div>
+          </div>
+        </div>
+      </div>
+
       <!-- SUMMARY + STATUS ROW -->
       <div class="charts-row" style="margin-top:0;">
 
@@ -341,6 +355,7 @@ td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g40
       </div>
       <div class="toolbar">
         <input class="search-input" placeholder="חיפוש..." oninput="renderEXP()" id="exp-srch">
+        <button class="btn btn-outline btn-sm" onclick="toggleMonthFilter()" id="month-filter-btn">📅 החודש הזה</button>
         <select class="filter-select" onchange="renderEXP()" id="exp-cat-flt">
           <option value="">כל הקטגוריות</option>
           <option value="tools">כלים ותוכנות</option>
@@ -954,8 +969,8 @@ function drawBarChart() {
 
 function renderGeneral() {
   const {wsRev, auRev, lsRev, total} = getRevenues();
-  const totalExpenses = expenses.reduce((s,e)=>s+(parseInt(e.amount)||0),0);
-  const netProfit = total - totalExpenses;
+  const thisMonthExp = calculateCurrentMonthExpenses();
+  const netProfit = total - thisMonthExp;
   const labels = ['אתרים','פתרונות דיגיטליים','שיעורים פרטיים'];
   const data = [wsRev, auRev, lsRev];
   const colors = ['#1a5fd4','#0891b2','#7c3aed'];
@@ -997,9 +1012,9 @@ function renderGeneral() {
       <div class="kpi-sub">${mssnThisMonth.length} שיעורים החודש</div>
     </div>
     <div class="kpi-card c-orange">
-      <div class="kpi-label">רווח נקי</div>
+      <div class="kpi-label">רווח נקי (החודש)</div>
       <div class="kpi-val" style="color:${netProfit>=0?'var(--green)':'var(--red)'}">₪${netProfit.toLocaleString('he-IL')}</div>
-      <div class="kpi-sub">הכנסות פחות הוצאות</div>
+      <div class="kpi-sub">הכנסות פחות הוצאות החודש</div>
     </div>
     <div class="kpi-card c-orange" style="display:none">
       <div class="kpi-label">שיעורים החודש</div>
@@ -1008,6 +1023,7 @@ function renderGeneral() {
     </div>`;
 
   setTimeout(drawBarChart, 50);
+  setTimeout(drawExpenseChart, 100);
 
   const svg = document.getElementById('revenue-pie-svg');
   if(total === 0) {
@@ -1142,12 +1158,38 @@ function renderEXP() {
   const srch = (gv('exp-srch')||'').toLowerCase();
   const catF = gv('exp-cat-flt')||'';
   const typeF = gv('exp-type-flt')||'';
-  let items = expenses.filter(e => {
+  
+  // הרחב הוצאות קבועות לכל חודש
+  let expandedExpenses = [];
+  expenses.forEach(e => {
+    if(e.type === 'monthly' && e.billing_month) {
+      // הוצאה קבועה - הוסף לכל חודש מ-6 חודשים אחורה עד 6 קדימה
+      const baseDateParts = e.billing_month.split('-');
+      const baseYear = parseInt(baseDateParts[0]);
+      const baseMonth = parseInt(baseDateParts[1]) - 1;
+      
+      for(let i = -6; i <= 6; i++) {
+        const d = new Date(baseYear, baseMonth + i, 1);
+        expandedExpenses.push({
+          ...e,
+          date: d.toISOString().split('T')[0],
+          _isRecurring: true
+        });
+      }
+    } else {
+      expandedExpenses.push(e);
+    }
+  });
+  
+  let items = expandedExpenses.filter(e => {
     if(srch && !(e.name||'').toLowerCase().includes(srch)) return false;
     if(catF && e.category !== catF) return false;
     if(typeF && e.type !== typeF) return false;
     return true;
   });
+  
+  // מיין לפי תאריך יורד
+  items = items.sort((a,b) => new Date(b.date) - new Date(a.date));
 
   const tbody = document.getElementById('exp-tbody');
   const empty = document.getElementById('exp-empty');
@@ -1185,10 +1227,154 @@ function renderEXP() {
     <div class="stat-card"><div class="stat-label">רווח נקי</div><div class="stat-val ${profit>=0?'sv-green':'sv-red'}">₪${profit.toLocaleString('he-IL')}</div></div>`;
 }
 
-function updateCounts(){
-  document.getElementById('cnt-ws').textContent=websites.length;
-  document.getElementById('cnt-au').textContent=automations.length;
-  document.getElementById('cnt-ls').textContent=students.length;
+// ===== EXPENSE CHART =====
+let showOnlyThisMonth = false;
+function toggleMonthFilter() {
+  showOnlyThisMonth = !showOnlyThisMonth;
+  const btn = document.getElementById('month-filter-btn');
+  if(showOnlyThisMonth) {
+    btn.style.background = 'var(--blue)';
+    btn.style.color = 'white';
+    btn.style.borderColor = 'var(--blue)';
+  } else {
+    btn.style.background = 'var(--white)';
+    btn.style.color = 'var(--black)';
+    btn.style.borderColor = 'var(--g300)';
+  }
+  renderEXP();
+}
+
+function drawExpenseChart() {
+  const svg = document.getElementById('expense-chart-svg');
+  if(!svg) return;
+  const wrap = document.getElementById('expense-chart-wrap');
+  const W = wrap.offsetWidth || 500, H = 220;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const now = new Date();
+  const months = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({y:d.getFullYear(), m:d.getMonth(), label:['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][d.getMonth()]});
+  }
+
+  const expData = months.map(({y,m})=>expenses.filter(e=>{
+    const d=new Date((e.date||'')+'T12:00:00');
+    return d.getFullYear()===y && d.getMonth()===m;
+  }).reduce((s,e)=>s+(parseInt(e.amount)||0),0));
+
+  const incData = months.map(({y,m})=>{
+    const ws = websites.filter(w=>{
+      const d=new Date((w.end_date||'')+'T12:00:00');
+      return (w.paid||(w.advance&&w.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,w)=>s+(w.paid?(parseInt(w.price)||0):(parseInt(w.advance_amount)||0)),0);
+    const au = automations.filter(a=>{
+      const d=new Date((a.end_date||'')+'T12:00:00');
+      return (a.paid||(a.advance&&a.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;
+    }).reduce((s,a)=>s+(a.paid?(parseInt(a.price)||0):(parseInt(a.advance_amount)||0)),0);
+    return ws + au;
+  });
+
+  const maxVal = Math.max(...expData, ...incData, 1);
+  const padL=40, padR=10, padT=16, padB=36;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const barW = Math.floor(chartW/months.length*0.35);
+  const gap = chartW/months.length;
+
+  let out = '';
+  for(let g=1;g<=3;g++){
+    const yy = padT + chartH - (g/3)*chartH;
+    const val = Math.round((g/3)*maxVal);
+    out += `<line x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}" stroke="#e4e4e7" stroke-width="1" stroke-dasharray="4,3"/>`;
+    out += `<text x="${padL-4}" y="${yy+4}" text-anchor="end" font-size="9" fill="#a1a1aa" font-family="Heebo,sans-serif">₪${val>=1000?Math.round(val/1000)+'K':val}</text>`;
+  }
+
+  months.forEach(({label},i) => {
+    const x = padL + i*gap + gap/2 - barW;
+    const expH = Math.max((expData[i]/maxVal)*chartH, 2);
+    const incH = Math.max((incData[i]/maxVal)*chartH, 2);
+    
+    out += `<rect x="${x}" y="${padT+chartH-expH}" width="${barW*0.9}" height="${expH}" fill="#ef4444" rx="2"/>`;
+    out += `<rect x="${x+barW}" y="${padT+chartH-incH}" width="${barW*0.9}" height="${incH}" fill="#16a34a" rx="2"/>`;
+    out += `<text x="${x+barW/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#71717a" font-family="Heebo,sans-serif" font-weight="600">${label}</text>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+function calculateCurrentMonthExpenses() {
+  const now = new Date();
+  const thisM = now.getMonth(), thisY = now.getFullYear();
+  return expenses.filter(e=>{
+    const d=new Date((e.date||'')+'T12:00:00');
+    return d.getMonth()===thisM && d.getFullYear()===thisY;
+  }).reduce((s,e)=>s+(parseInt(e.amount)||0),0);
+}
+
+// ===== EXPENSE CHART & MONTH FILTER =====
+let showOnlyThisMonth = false;
+function toggleMonthFilter() {
+  showOnlyThisMonth = !showOnlyThisMonth;
+  const btn = document.getElementById('month-filter-btn');
+  if(showOnlyThisMonth) {
+    btn.style.background = 'var(--blue)';
+    btn.style.color = 'white';
+    btn.style.borderColor = 'var(--blue)';
+  } else {
+    btn.style.background = 'var(--white)';
+    btn.style.color = 'var(--black)';
+    btn.style.borderColor = 'var(--g300)';
+  }
+  renderEXP();
+}
+
+function drawExpenseChart() {
+  const svg = document.getElementById('expense-chart-svg');
+  if(!svg) return;
+  const wrap = document.getElementById('expense-chart-wrap');
+  const W = wrap.offsetWidth || 500, H = 220;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const now = new Date();
+  const months = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({y:d.getFullYear(), m:d.getMonth(), label:['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'][d.getMonth()]});
+  }
+
+  const expData = months.map(({y,m})=>expenses.filter(e=>{const d=new Date((e.date||'')+'T12:00:00');return d.getFullYear()===y && d.getMonth()===m;}).reduce((s,e)=>s+(parseInt(e.amount)||0),0));
+  const incData = months.map(({y,m})=>{const ws = websites.filter(w=>{const d=new Date((w.end_date||'')+'T12:00:00');return (w.paid||(w.advance&&w.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;}).reduce((s,w)=>s+(w.paid?(parseInt(w.price)||0):(parseInt(w.advance_amount)||0)),0);const au = automations.filter(a=>{const d=new Date((a.end_date||'')+'T12:00:00');return (a.paid||(a.advance&&a.advance_amount)) && d.getFullYear()===y && d.getMonth()===m;}).reduce((s,a)=>s+(a.paid?(parseInt(a.price)||0):(parseInt(a.advance_amount)||0)),0);return ws + au;});
+
+  const maxVal = Math.max(...expData, ...incData, 1);
+  const padL=40, padR=10, padT=16, padB=36;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+  const barW = Math.floor(chartW/months.length*0.35);
+  const gap = chartW/months.length;
+
+  let out = '';
+  for(let g=1;g<=3;g++){
+    const yy = padT + chartH - (g/3)*chartH;
+    const val = Math.round((g/3)*maxVal);
+    out += `<line x1="${padL}" x2="${W-padR}" y1="${yy}" y2="${yy}" stroke="#e4e4e7" stroke-width="1" stroke-dasharray="4,3"/>`;
+    out += `<text x="${padL-4}" y="${yy+4}" text-anchor="end" font-size="9" fill="#a1a1aa" font-family="Heebo,sans-serif">₪${val>=1000?Math.round(val/1000)+'K':val}</text>`;
+  }
+
+  months.forEach(({label},i) => {
+    const x = padL + i*gap + gap/2 - barW;
+    const expH = Math.max((expData[i]/maxVal)*chartH, 2);
+    const incH = Math.max((incData[i]/maxVal)*chartH, 2);
+    out += `<rect x="${x}" y="${padT+chartH-expH}" width="${barW*0.9}" height="${expH}" fill="#ef4444" rx="2"/>`;
+    out += `<rect x="${x+barW}" y="${padT+chartH-incH}" width="${barW*0.9}" height="${incH}" fill="#16a34a" rx="2"/>`;
+    out += `<text x="${x+barW/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#71717a" font-family="Heebo,sans-serif" font-weight="600">${label}</text>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+function calculateCurrentMonthExpenses() {
+  const now = new Date();
+  const thisM = now.getMonth(), thisY = now.getFullYear();
+  return expenses.filter(e=>{const d=new Date((e.date||'')+'T12:00:00');return d.getMonth()===thisM && d.getFullYear()===thisY;}).reduce((s,e)=>s+(parseInt(e.amount)||0),0);
 }
 
 // ===== INIT =====
