@@ -249,15 +249,42 @@ td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g40
       <button class="logout-btn" onclick="doLogout()">יציאה</button>
     </div>
   </header>
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('ws')" id="tab-ws">אתרים <span class="tab-cnt" id="cnt-ws">0</span></div>
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard')" id="tab-dashboard">דשבורד</div>
+    <div class="tab" onclick="switchTab('ws')" id="tab-ws">אתרים
+ cnt" id="cnt-ws">0</span></div>
     <div class="tab" onclick="switchTab('au')" id="tab-au">פתרונות דיגיטליים <span class="tab-cnt" id="cnt-au">0</span></div>
     <div class="tab" onclick="switchTab('ls')" id="tab-ls">שיעורים פרטיים <span class="tab-cnt" id="cnt-ls">0</span></div>
     <div class="tab" onclick="switchTab('gen')" id="tab-gen">כללי</div>
     <div class="tab" onclick="switchTab('exp')" id="tab-exp">הוצאות <span class="tab-cnt" id="cnt-exp">0</span></div>
   </div>
-  <div class="main">
-    <div class="panel active" id="panel-ws">
+ <div class="main">
+    <div class="panel active" id="panel-dashboard" style="padding:0;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:24px 32px;">
+        <div class="dashboard-card" onclick="switchTab('ws')" style="background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px;cursor:pointer;text-align:center;transition:all .2s;">
+          <div style="font-size:48px;font-weight:900;color:var(--blue);margin-bottom:8px;" id="dash-ws-cnt">0</div>
+          <div style="font-size:14px;font-weight:700;">אתרים</div>
+        </div>
+        <div class="dashboard-card" onclick="switchTab('au')" style="background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px;cursor:pointer;text-align:center;transition:all .2s;">
+          <div style="font-size:48px;font-weight:900;color:#0891b2;margin-bottom:8px;" id="dash-au-cnt">0</div>
+          <div style="font-size:14px;font-weight:700;">פתרונות דיגיטליים</div>
+        </div>
+        <div class="dashboard-card" onclick="switchTab('ls')" style="background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px;cursor:pointer;text-align:center;transition:all .2s;">
+          <div style="font-size:48px;font-weight:900;color:#7c3aed;margin-bottom:8px;" id="dash-ls-cnt">0</div>
+          <div style="font-size:14px;font-weight:700;">שיעורים פרטיים</div>
+        </div>
+        <div class="dashboard-card" onclick="switchTab('gen')" style="background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px;cursor:pointer;text-align:center;transition:all .2s;">
+          <div style="font-size:48px;font-weight:900;color:#f59e0b;margin-bottom:8px;">📊</div>
+          <div style="font-size:14px;font-weight:700;">כללי</div>
+        </div>
+        <div class="dashboard-card" onclick="switchTab('exp')" style="background:var(--white);border:1px solid var(--g200);border-radius:12px;padding:24px;cursor:pointer;text-align:center;transition:all .2s;">
+          <div style="font-size:48px;font-weight:900;color:var(--red);margin-bottom:8px;" id="dash-exp-cnt">0</div>
+          <div style="font-size:14px;font-weight:700;">הוצאות</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-ws">
       <div class="stats-row" id="ws-stats"></div>
       <div class="sec-hdr"><div class="sec-title">אתרים</div><button class="btn btn-primary" onclick="openModal('website')">+ הוסף אתר</button></div>
       <div class="toolbar">
@@ -576,8 +603,8 @@ function switchTab(t) {
   document.getElementById('tab-'+t).classList.add('active');
   document.getElementById('panel-'+t).classList.add('active');
   if(t==='gen') renderGeneral();
+  if(t==='dashboard') updateDashboard();
 }
-
 // ===== LOAD ALL =====
 async function loadAll() {
   showLoading('טוען נתונים...');
@@ -1242,7 +1269,12 @@ function updateCounts(){
   document.getElementById('cnt-au').textContent=automations.length;
   document.getElementById('cnt-ls').textContent=students.length;
 }
-
+function updateDashboard() {
+  document.getElementById('dash-ws-cnt').textContent = websites.length;
+  document.getElementById('dash-au-cnt').textContent = automations.length;
+  document.getElementById('dash-ls-cnt').textContent = students.length;
+  document.getElementById('dash-exp-cnt').textContent = expenses.length;
+}
 // ===== INIT =====
 if(localStorage.getItem('mb-auth')==='1'){ showView('main'); loadAll(); }
 </script>
