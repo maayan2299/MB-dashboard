@@ -266,7 +266,7 @@ td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g40
           <option value="">כל הסטטוסים</option><option value="spec">אפיון</option><option value="design">עיצוב</option><option value="waiting-client">מחכה ללקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option>
         </select>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>שם האתר</th><th>לקוח</th><th>סוג</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>שולם הכל</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="ws-tbody"></tbody></table><div class="empty" id="ws-empty" style="display:none"><div class="empty-icon">🌐</div><div class="empty-text">אין אתרים עדיין</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>שם האתר</th><th>לקוח</th><th>סוג</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>סכום מקדמה</th> <td>${w.advance_amount||'—'}</td> <td>${w.paid?'✓':'—'}</td><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="ws-tbody"></tbody></table><div class="empty" id="ws-empty" style="display:none"><div class="empty-icon">🌐</div><div class="empty-text">אין אתרים עדיין</div></div></div>
     </div>
     <div class="panel" id="panel-au">
       <div class="stats-row" id="au-stats"></div>
@@ -277,7 +277,7 @@ td .nm{font-weight:600;color:var(--black);}td .sb{font-size:11px;color:var(--g40
           <option value="">כל הסטטוסים</option><option value="spec">אפיון</option><option value="design">בנייה</option><option value="waiting-client">מחכה ללקוח</option><option value="waiting-pay">מחכה לתשלום</option><option value="waiting-domain">עיכוב חיבור לדומיין</option><option value="waiting-payment-sys">עיכוב חיבור לסליקה</option><option value="waiting-connect">ממתין לחיבור/סליקה מהלקוח</option><option value="done">הושלם</option>
         </select>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>שם הפרויקט</th><th>לקוח</th><th>סוג פתרון</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>שולם הכל</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="au-tbody"></tbody></table><div class="empty" id="au-empty" style="display:none"><div class="empty-icon">⚡</div><div class="empty-text">אין פרויקטים עדיין</div></div></div>
+      <div class="table-wrap"><table><thead><tr><th>שם הפרויקט</th><th>לקוח</th><th>סוג פתרון</th><th>תאריכים</th><th>מחיר</th><th>מקדמה</th><th>סכום מקדמה</th> <td>${w.advance_amount||'—'}</td> <td>${w.paid?'✓':'—'}</td><th>סטטוס</th><th>פעולות</th></tr></thead><tbody id="au-tbody"></tbody></table><div class="empty" id="au-empty" style="display:none"><div class="empty-icon">⚡</div><div class="empty-text">אין פרויקטים עדיין</div></div></div>
     </div>
     <div class="panel" id="panel-ls">
       <div class="stats-row" id="ls-stats"></div>
